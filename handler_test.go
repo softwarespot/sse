@@ -68,9 +68,7 @@ func Test_Handler(t *testing.T) {
 
 func assertBroadcastEvents[T any](t testing.TB, h *sse.Handler[T], evts ...T) {
 	t.Helper()
-	for _, evt := range evts {
-		assertNoError(t, h.Broadcast(evt))
-	}
+	assertNoError(t, h.Broadcast(evts...))
 
 	// Wait for the event(s) to be flushed
 	time.Sleep(256 * time.Millisecond)

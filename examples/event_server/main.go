@@ -16,8 +16,10 @@ func main() {
 
 	go func() {
 		for {
-			evt := rand.Int64N(1000)
-			fmt.Println("sse handler: broadcast event", h.Broadcast(evt))
+			evt1 := rand.Int64N(1000)
+			evt2 := rand.Int64N(1000)
+			evt3 := rand.Int64N(1000)
+			fmt.Println("sse handler: broadcast event", h.Broadcast(evt1, evt2, evt3))
 			time.Sleep(64 * time.Millisecond)
 		}
 	}()

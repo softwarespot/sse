@@ -26,11 +26,13 @@ func main() {
 	h := sse.New[CustomEvent](nil)
 	go func() {
 		for {
-			id := must(generateID[string]())
-			evt := CustomEvent{
-				ID: id,
+			evt1 := CustomEvent{
+				ID: must(generateID[string]()),
 			}
-			fmt.Println("sse handler: broadcast event", h.Broadcast(evt))
+			evt2 := CustomEvent{
+				ID: must(generateID[string]()),
+			}
+			fmt.Println("sse handler: broadcast event", h.Broadcast(evt1, evt2))
 			time.Sleep(64 * time.Millisecond)
 		}
 	}()

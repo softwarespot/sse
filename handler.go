@@ -25,13 +25,13 @@ type Handler[T any] struct {
 	clientEvtsChs      map[chan []T]empty
 
 	evtsReplay *replay.Replay[T]
-	evtsCh     chan T
+	evtsCh     chan []T
 
 	evtsEncoder func([]T) ([]byte, error)
 }
 
 // New initializes a Server-Sent Events (SSE) handler, with an optional configuration.
-// If the provided configuration is nil, it will use default settings.
+// If the provided configuration is nil, then it uses the default configuration.
 func New[T any](cfg *Config[T]) *Handler[T] {
 	if cfg == nil {
 		cfg = NewConfig[T]()
@@ -47,7 +47,7 @@ func New[T any](cfg *Config[T]) *Handler[T] {
 		clientEvtsChs:      map[chan []T]empty{},
 
 		evtsReplay: replay.New[T](cfg.Replay.Maximum, cfg.Replay.Expiry),
-		evtsCh:     make(chan T),
+		evtsCh:     make(chan []T),
 
 		evtsEncoder: defaultEventsEncoder[T],
 	}
@@ -78,7 +78,7 @@ func (h *Handler[T]) start() {
 			close(h.completeCh)
 			return true
 		}
-		evts []T
+		flushableEvts []T
 	)
 	for {
 		select {
@@ -99,19 +99,17 @@ func (h *Handler[T]) start() {
 			if cleanup() {
 				return
 			}
-		case evt := <-h.evtsCh:
-			evts = append(evts, evt)
+		case evts := <-h.evtsCh:
+			flushableEvts = append(flushableEvts, evts...)
 		case <-flushTicker.C:
-			if len(evts) == 0 {
+			if len(flushableEvts) == 0 {
 				break
 			}
 			for clientEvtsCh := range h.clientEvtsChs {
-				clientEvtsCh <- evts
+				clientEvtsCh <- flushableEvts
 			}
-			for _, evt := range evts {
-				h.evtsReplay.Add(evt)
-			}
-			evts = nil
+			h.evtsReplay.Add(flushableEvts...)
+			flushableEvts = nil
 		}
 	}
 }
@@ -185,8 +183,8 @@ func (h *Handler[T]) ServeSSE(w http.ResponseWriter, r *http.Request) error {
 	}
 }
 
-// ServeHTTP implements the http.Handler interface for the SSE handler.
-// It calls ServeSSE and handles any errors by writing an HTTP error response.
+// ServeHTTP implements the http.Handler interface for the Server-Sent Events (SSE) handler.
+// It calls ServeSSE and handles any errors by writing an HTTP error response with status code 500.
 func (h *Handler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h.ServeSSE(w, r); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -223,14 +221,14 @@ func (h *Handler[T]) replayedEvents() iter.Seq[[]T] {
 	}
 }
 
-// Broadcast sends an event to all connected clients.
+// Broadcast broadcasts one or more events to all the connected clients.
 // It returns an error if the handler is closed.
-func (h *Handler[T]) Broadcast(evt T) error {
+func (h *Handler[T]) Broadcast(evts ...T) error {
 	if h.isClosing() {
 		return errors.New("sse-handler: handler is closed")
 	}
 
-	h.evtsCh <- evt
+	h.evtsCh <- evts
 	return nil
 }
 

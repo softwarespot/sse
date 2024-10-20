@@ -40,8 +40,8 @@ func main() {
         var evt int
         for {
             fmt.Println("sse handler: broadcast event", h.Broadcast(evt))
-            time.Sleep(64 * time.Millisecond)
             evt++
+            time.Sleep(64 * time.Millisecond)
         }
     }()
 
