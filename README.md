@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/softwarespot/sse.svg)](https://pkg.go.dev/github.com/softwarespot/sse) ![Go Tests](https://github.com/softwarespot/replay/actions/workflows/go.yml/badge.svg)
 
-**Server-Sent Events (SSE) handler** is a generic and [http.Handler](https://pkg.go.dev/net/http#Handler) compliant module, that implements real-time event streaming from a server to web clients using the [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) protocol. It's a robust module for managing multiple client connections, broadcasting events, and handling client registrations and unregistrations efficiently.
+**Server-Sent Events (SSE) handler** is a generic compatible and [http.Handler](https://pkg.go.dev/net/http#Handler) compliant module, that implements real-time event streaming from a server to web clients using the [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) protocol. It's a robust module for managing multiple client connections, broadcasting events, and handling client registrations and unregistrations efficiently.
 
 Examples of using this module can be found from the [./examples](./examples/) directory.
 
