@@ -18,9 +18,11 @@ type CustomEvent struct {
 }
 
 func main() {
-	ctx, _ := signalTrap(context.Background(), os.Interrupt, syscall.SIGTERM)
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
+	ctx0, cancel0 := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel0()
+
+	ctx1, cancel1 := context.WithTimeout(ctx0, 5*time.Minute)
+	defer cancel1()
 
 	// Use the default configuration
 	h := sse.New[CustomEvent](nil)
@@ -44,7 +46,7 @@ func main() {
 	}()
 
 	// Wait for either a termination signal or timeout of the context
-	<-ctx.Done()
+	<-ctx1.Done()
 
 	if err := h.Close(); err != nil {
 		fmt.Println("sse handler: server shutdown with error:", err)
@@ -68,18 +70,4 @@ func must[T any](res T, err error) T {
 		panic(err)
 	}
 	return res
-}
-
-func signalTrap(ctx context.Context, sig ...os.Signal) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(ctx)
-	go func() {
-		signals := make(chan os.Signal, 1)
-		signal.Notify(signals, sig...)
-		select {
-		case <-ctx.Done():
-		case <-signals:
-		}
-		cancel()
-	}()
-	return ctx, cancel
 }

@@ -25,9 +25,11 @@ type PingEvent struct {
 }
 
 func main() {
-	ctx, _ := signalTrap(context.Background(), os.Interrupt, syscall.SIGTERM)
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
-	defer cancel()
+	ctx0, cancel0 := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel0()
+
+	ctx1, cancel1 := context.WithTimeout(ctx0, 5*time.Minute)
+	defer cancel1()
 
 	var wg sync.WaitGroup
 	s := http.Server{
@@ -86,10 +88,10 @@ func main() {
 	}()
 
 	// Wait for either a termination signal or timeout of the context
-	<-ctx.Done()
+	<-ctx1.Done()
 
 	fmt.Println("start server shutdown")
-	ctxShutdown, shutdownCancel := context.WithTimeout(ctx, 5*time.Second)
+	ctxShutdown, shutdownCancel := context.WithTimeout(ctx0, 5*time.Second)
 	defer shutdownCancel()
 
 	err := s.Shutdown(ctxShutdown)
@@ -145,18 +147,4 @@ func parsePingDuration(res string) string {
 		return ""
 	}
 	return strings.ReplaceAll(after, " ", "")
-}
-
-func signalTrap(ctx context.Context, sig ...os.Signal) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(ctx)
-	go func() {
-		signals := make(chan os.Signal, 1)
-		signal.Notify(signals, sig...)
-		select {
-		case <-ctx.Done():
-		case <-signals:
-		}
-		cancel()
-	}()
-	return ctx, cancel
 }
