@@ -145,6 +145,14 @@ func (h *Handler[T]) isClosing() bool {
 	}
 }
 
+// ServeHTTP implements the http.Handler interface for the Server-Sent Events (SSE) handler.
+// It calls ServeSSE and handles any errors by writing an HTTP error response with status code 500.
+func (h *Handler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := h.ServeSSE(w, r); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // ServeSSE serves the Server-Sent Events (SSE) to the HTTP response writer.
 // It sets the appropriate headers and streams events to the client until the connection is closed.
 func (h *Handler[T]) ServeSSE(w http.ResponseWriter, r *http.Request) error {
@@ -180,14 +188,6 @@ func (h *Handler[T]) ServeSSE(w http.ResponseWriter, r *http.Request) error {
 			}
 			flusher.Flush()
 		}
-	}
-}
-
-// ServeHTTP implements the http.Handler interface for the Server-Sent Events (SSE) handler.
-// It calls ServeSSE and handles any errors by writing an HTTP error response with status code 500.
-func (h *Handler[T]) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if err := h.ServeSSE(w, r); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
