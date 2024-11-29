@@ -28,15 +28,16 @@ type Config[T any] struct {
 
 // NewConfig initializes a configuration instance with reasonable defaults.
 func NewConfig[T any]() *Config[T] {
-	cfg := &Config[T]{}
-	cfg.FlushFrequency = 256 * time.Millisecond
-	cfg.CloseTimeout = 30 * time.Second
+	cfg := &Config[T]{
+		FlushFrequency: 256 * time.Millisecond,
+		CloseTimeout:   30 * time.Second,
+
+		// Use the default encoder
+		Encoder: nil,
+	}
 	cfg.Replay.Initial = 256
 	cfg.Replay.Maximum = 2048
 	cfg.Replay.Expiry = 30 * time.Second
-
-	// Use the default encoder
-	cfg.Encoder = nil
 
 	return cfg
 }
