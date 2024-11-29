@@ -115,7 +115,7 @@ func (h *Handler[T]) start() {
 }
 
 // Close closes the Server-Sent Events (SSE) handler.
-// It waits for all clients to complete/close, with a timeout defined in the configuration.
+// It waits for all the clients to close/complete, with a timeout defined in the configuration.
 func (h *Handler[T]) Close() error {
 	if h.isClosing() {
 		return errors.New("sse-handler: handler is closed")
@@ -124,7 +124,7 @@ func (h *Handler[T]) Close() error {
 	h.closingCh <- empty{}
 	close(h.closingCh)
 
-	// Wait for all clients to complete/close with a timeout
+	// Wait for all the clients to close/complete or on timeout
 	select {
 	case <-h.completeCh:
 		h.evtsReplay.Clear()
