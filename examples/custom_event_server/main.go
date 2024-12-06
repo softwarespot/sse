@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
@@ -29,10 +31,10 @@ func main() {
 	go func() {
 		for {
 			evt1 := CustomEvent{
-				ID: must(generateID[string]()),
+				ID: must(createID[string]()),
 			}
 			evt2 := CustomEvent{
-				ID: must(generateID[string]()),
+				ID: must(createID[string]()),
 			}
 			fmt.Println("sse handler: broadcast event", h.Broadcast(evt1, evt2))
 			time.Sleep(64 * time.Millisecond)
@@ -57,12 +59,15 @@ func main() {
 
 // Helpers
 
-func generateID[T ~string]() (T, error) {
-	b := make([]byte, 8)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("creating a new ID: %w", err)
+func createID[T ~string]() (T, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b[:24]); err != nil {
+		return "", fmt.Errorf("creating ID: %w", err)
 	}
-	return T(fmt.Sprintf("%x-%d", b, time.Now().UnixMilli())), nil
+
+	// 8 bytes used for the timestamp i.e. 32 - 8 = 24
+	binary.BigEndian.PutUint64(b[24:], uint64(time.Now().UnixMilli()))
+	return T(hex.EncodeToString(b)), nil
 }
 
 func must[T any](res T, err error) T {

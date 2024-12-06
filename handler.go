@@ -76,6 +76,7 @@ func (h *Handler[T]) start() {
 			close(h.clientUnregisterCh)
 			close(h.evtsCh)
 			close(h.completeCh)
+
 			return true
 		}
 		flushableEvts []T
