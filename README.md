@@ -8,7 +8,7 @@ Examples of using this module can be found from the [./examples](./examples/) di
 
 ## Prerequisites
 
--   Go 1.23.0 or above
+- Go 1.23.0 or above
 
 ## Installation
 
