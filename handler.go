@@ -205,7 +205,7 @@ func (h *Handler[T]) unregister(clientEvtsCh chan []T) {
 func (h *Handler[T]) replayedEvents() iter.Seq[[]T] {
 	return func(yield func([]T) bool) {
 		chunk := make([]T, 0, h.cfg.Replay.Initial)
-		for evt := range h.evtsReplay.All() {
+		for evt := range h.evtsReplay.Iter() {
 			chunk = append(chunk, evt)
 			if len(chunk) == h.cfg.Replay.Initial {
 				if !yield(chunk) {
